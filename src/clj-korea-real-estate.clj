@@ -8,12 +8,15 @@
 
 (def rtms-mobile-url "http://rtmobile.molit.go.kr/app/main.jsp")
 (def rtms-url "http://rt.molit.go.kr/rtApt.do?cmd=srhLocalView")
+(def recent-bound-year 2016)
+
+(def rtms-mobile-base-url "http://rtmobile.molit.go.kr/mobile.do")
 
 (def jongryu-code
   {
    :아파트, 1
-   :연립/다세대, 2
-   :단독/다가구, 3
+   :연립-다세대, 2
+   :단독-다가구, 3
    :오피스텔, 5
    :분양/입주권, 6
    })
@@ -51,99 +54,128 @@
    {:sido-code "50", :sido-name "제주특별자치도"}
    ])
 
-(def gugun-list
-  [
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11680", :gugun-name, "강남구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11740", :gugun-name, "강동구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11305", :gugun-name, "강북구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11500", :gugun-name, "강서구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11620", :gugun-name, "관악구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11215", :gugun-name, "광진구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11530", :gugun-name, "구로구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11545", :gugun-name, "금천구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11350", :gugun-name, "노원구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11320", :gugun-name, "도봉구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11230", :gugun-name, "동대문구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11590", :gugun-name, "동작구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11440", :gugun-name, "마포구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11410", :gugun-name, "서대문구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11650", :gugun-name, "서초구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11200", :gugun-name, "성동구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11290", :gugun-name, "성북구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11710", :gugun-name, "송파구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11470", :gugun-name, "양천구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11560", :gugun-name, "영등포구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11170", :gugun-name, "용산구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11380", :gugun-name, "은평구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11110", :gugun-name, "종로구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11140", :gugun-name, "중구"}
-   {:sido-code "11", :sido-name, "서울특별시" :gugun-code, "11260", :gugun-name, "중랑구"}
-   ])
+(defn build-url-param [kwargs]
+  (clojure.string/join "&"
+                       (map (fn [item]
+                              (let
+                                  [k (key item)
+                                   v (val item)
+                                   v2 (cond
+                                        (= k :jongryuCode) (get jongryu-code v)
+                                        (= k :gubunCode) (get gubun-code v)
+                                        (= k :gubunCode2) (get gubun2-code v)
+                                        :else v)]
+                                (format "%s=%s" (name k) v2)))
+                            kwargs)))
 
-(defn get-dong-list-url [gugun deal-year jongryu-code gubun-code gubun2-code]
-  (let
-      [cmd "getDongListAjax"
-       sido-code (:sido-code gugun)
-       gugun-code (:gugun-code gugun)]
-    (<< "http://rtmobile.molit.go.kr/mobile.do?cmd=~{cmd}&sidoCode=~{sido-code}&gugunCode=~{gugun-code}&dealYear=~{deal-year}&jongryuCode=~{jongryu-code}&gubunCode=~{gubun-code}&gubunCode2=~{gubun2-code}")))
+(defn get-list-url [kwargs]
+  (let [param (build-url-param kwargs)]
+    (<< "~{rtms-mobile-base-url}?~{param}")))
 
-(defn get-danji-list-url [dong deal-year jongryu-code gubun-code gubun2-code]
-  (let
-      [cmd "getDanjiListAjax"
-       sido-code (:sido-code dong)
-       gugun-code (:gugun-code dong)
-       dong-code (:dong-code dong)
-       view-type "LOCAL"]
-    (<< "http://rtmobile.molit.go.kr/mobile.do?cmd=~{cmd}&viewType=~{view-type}&sidoCode=~{sido-code}&gugunCode=~{gugun-code}&dealYear=~{deal-year}&jongryuCode=~{jongryu-code}&gubunCode=~{gubun-code}&gubunCode2=~{gubun2-code}&dongCode=~{dong-code}")))
+(defn get-json-list [kwargs]
+  (let [url (get-list-url kwargs)
+        response (http/get url)
+        body (:body @response)
+        json-body (json/read-str body)]
+    (get json-body "jsonList")))
 
-(defn build-dong-list [gugun-list deal-year jongryu-code gubun-code gubun2-code]
-  (flatten (map (fn [gugun]
-         (let [url (get-dong-list-url gugun deal-year jongryu-code gubun-code gubun2-code)
-               response (http/get url)
-               body (:body @response)
-               json-body (json/read-str body)]
-           (flatten (map (fn [dong]
-                  {:sido-code (:sido-code gugun)
-                   :sido-name (:sido-name gugun)
-                   :gugun-code (:gugun-code gugun)
-                   :gugun-name (:gugun-name gugun)
-                   :dong-code (get dong "DONG_CODE")
-                   :dong-name (get dong "DONG_NAME")})
-                (get json-body "jsonList")))))
-       gugun-list)))
+(defn parse-gugun-list [sido gugun]
+  {:sido-code (:sido-code sido)
+   :sido-name (:sido-name sido)
+   :gugun-code (get gugun "GUGUN_CODE")
+   :gugun-name (get gugun "GUGUN_NAME")})
 
-(defn build-danji-list [dong-list deal-year jongryu-code gubun-code gubun2-code]
-  (flatten (map (fn [dong]
-         (let [url (get-danji-list-url dong deal-year jongryu-code gubun-code gubun2-code)
-               response (http/get url)
-               body (:body @response)
-               json-body (json/read-str body)]
-           (flatten (map (fn [danji]
-                  {:sido-code (:sido-code dong)
-                   :sido-name (:sido-name dong)
-                   :gugun-code (:gugun-code dong)
-                   :gugun-name (:gugun-name dong)
-                   :dong-code (:dong-code dong)
-                   :dong-name (:dong-name dong)
-                   :danji-code (get danji "BLDG_CD")
-                   :danji-name (get danji "BLDG_NM")})
-                (get json-body "jsonList")))))
-       dong-list)))
+(defn parse-dong-list [gugun dong]
+  {:sido-code (:sido-code gugun)
+   :sido-name (:sido-name gugun)
+   :gugun-code (:gugun-code gugun)
+   :gugun-name (:gugun-name gugun)
+   :dong-code (get dong "DONG_CODE")
+   :dong-name (get dong "DONG_NAME")})
 
-(defn save-list [lst filename]
+(defn parse-building-list [dong building jongryu-code]
+  {:sido-code (:sido-code dong)
+   :sido-name (:sido-name dong)
+   :gugun-code (:gugun-code dong)
+   :gugun-name (:gugun-name dong)
+   :dong-code (:dong-code dong)
+   :dong-name (:dong-name dong)
+   :building-code (get building "BLDG_CD")
+   :building-name (get building "BLDG_NM")
+   :jongryu-code jongryu-code})
+
+(defn build-gugun-list [sido-list]
+  (flatten
+   (map (fn [sido]
+          (flatten
+           (map (fn [gugun] (parse-gugun-list sido gugun))
+                (get-json-list {:cmd "getGugunListAjax" :sidoCode (:sido-code sido)}))))
+        sido-list)))
+
+(defn build-dong-list [gugun-list]
+  (flatten
+   (map (fn [gugun]
+          (flatten
+           (map (fn [dong] (parse-dong-list gugun dong))
+                (get-json-list {:cmd "getDongListAjax"
+                                :sidoCode (:sido-code gugun)
+                                :gugunCode (:gugun-code gugun)}))))
+        gugun-list)))
+
+(defn build-building-list [dong-list deal-year jongryu-code gubun-code gubun2-code]
+  (flatten
+   (map (fn [dong]
+          (flatten
+           (map (fn [building] (parse-building-list dong building jongryu-code))
+                (get-json-list {:cmd "getDanjiListAjax"
+                                :sidoCode (:sido-code dong)
+                                :gugunCode (:gugun-code dong)
+                                :dongCode (:dong-code dong)
+                                :viewType "LOCAL"
+                                :dealYear deal-year
+                                :jongryuCode jongryu-code
+                                :gubunCode gubun-code
+                                :gubunCode2 gubun2-code}))))
+        dong-list)))
+
+(defn build-whole-rent-building-list [dong-list jongryu-code-list]
+  (distinct
+   (flatten
+    (map (fn [year]
+           (flatten
+            (map #(build-building-list seoul-dong-list year % :전월세 :지번)
+                 jongryu-code-list)))
+         (range 2006 recent-year)))))
+
+(defn save-list-to-file [lst filename]
   (let
       [file (java.io.File. filename)]
     (.mkdirs (.getParentFile file))
-    (spit file (prn-str lst))))
+    (spit file (prn-str lst)))
+  lst)
 
-(defn save-dong-list [deal-year jongryu-code gubun-code gubun2-code]
-  (let [dong-list (build-dong-list gugun-list deal-year jongryu-code gubun-code gubun2-code)]
-    (save-list dong-list (<< "data/dong-list-~{deal-year}-~{jongryu-code}-~{gubun-code}-~{gubun2-code}.dat"))))
+(defn save-gugun-list [sido-list]
+  (let [gugun-list (build-gugun-list sido-list)]
+    (save-list-to-file gugun-list (<< "data/gugun-list.dat"))))
 
-(defn save-danji-list [deal-year jongryu-code gubun-code gubun2-code]
-  (let [danji-list (build-danji-list dong-list gugun-list deal-year jongryu-code gubun-code gubun2-code)]
-    (save-list dong-list (<< "data/danji-list-~{deal-year}-~{jongryu-code}-~{gubun-code}-~{gubun2-code}.dat"))))
+(defn save-dong-list [gugun-list]
+  (let [dong-list (build-dong-list gugun-list)]
+    (save-list-to-file dong-list (<< "data/dong-list.dat"))))
 
-(save-dong-list 2015 (:아파트 jongryu-code) (:전월세 gubun-code) (:지번 gubun2-code))
-(save-danji-list 2015 (:아파트 jongryu-code) (:전월세 gubun-code) (:지번 gubun2-code))
+(defn save-building-list [dong-list deal-year jongryu-code gubun-code gubun2-code]
+  (let [building-list (build-building-list dong-list deal-year jongryu-code gubun-code gubun2-code)]
+    (save-list-to-file building-list (<< "data/building-list-~{deal-year}-~{(name jongryu-code)}-~{(name gubun-code)}.dat"))))
+
+(defn save-whole-rent-building-list [dong-list jongryu-code-list]
+  (let [building-list (build-whole-rent-building-list dong-list jongryu-code-list)]
+    (save-list-to-file building-list (<< "data/whole-rent-building-list.dat"))))
+
+
+(def gugun-list (save-gugun-list sido-list))
+(def dong-list (save-dong-list gugun-list))
+(def gugun-list (read-string (slurp "data/gugun-list.dat")))
+(def dong-list (read-string (slurp "data/dong-list.dat")))
+(def seoul-dong-list (filter (fn [item] (= (:gugun-code item) "11620")) dong-list))
+
+(def building-seoul-rent-list (save-whole-rent-building-list seoul-dong-list '(:아파트 :연립-다세대 :단독-다가구)))
 
