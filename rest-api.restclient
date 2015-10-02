@@ -32,6 +32,14 @@ User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/601.1.56
 :gubunCode2 := "LAND"
 GET http://rtmobile.molit.go.kr/mobile.do?cmd=:cmd&sidoCode=:sidoCode&gugunCode=:gugunCode&dealYear=:dealYear&jongryuCode=:jongryuCode&gubunCode=:gubunCode&gubunCode2=:gubunCode2
 
+
+# 구군 소속 동 목록 가져오기 (구분코드 없이)
+:cmd := "getDongListAjax"
+:sidoCode := "11"
+:gugunCode := "11620"
+GET http://rtmobile.molit.go.kr/mobile.do?cmd=:cmd&sidoCode=:sidoCode&gugunCode=:gugunCode
+
+
 # 동 소속 아파트 단지 목록 가져오기
 :cmd := "getDanjiListAjax"
 :viewType := "LOCAL"
