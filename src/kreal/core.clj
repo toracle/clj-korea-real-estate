@@ -11,7 +11,8 @@
 
 (defn build-rent-building-list [dong-list year jongryu-code-list]
   (flatten
-   (map '#(urls/build-building-list seoul-dong-list year % :전월세 :지번)
+   (map (fn [jongryu-code]
+          (urls/build-building-list dong-list year jongryu-code :전월세 :지번))
         jongryu-code-list)))
 
 (defn save-list-to-file [lst filename]
@@ -34,7 +35,7 @@
     (save-list-to-file building-list (<< "data/building-list-~{deal-year}-~{(name jongryu-code)}-~{(name gubun-code)}.dat"))))
 
 (defn save-whole-rent-building-list [dong-list jongryu-code-list]
-  (let [building-list (build-rent-building-list dong-list jongryu-code-list)]
+  (let [building-list (build-rent-building-list dong-list 2015 jongryu-code-list)]
     (save-list-to-file building-list (<< "data/whole-rent-building-list.dat"))))
 
 (def gugun-list (save-gugun-list code/sido-list))
@@ -45,7 +46,7 @@
 
 (def dong-list (read-string (slurp "data/dong-list.dat")))
 
-(def seoul-dong-list (filter (fn [item] (= (:gugun-code item) "11620")) dong-list))
+(def seoul-dong-list (distinct (filter (fn [item] (= (:gugun-code item) "11620")) dong-list)))
 
 (def building-seoul-rent-list (save-whole-rent-building-list seoul-dong-list '(:아파트 :연립-다세대 :단독-다가구)))
 
