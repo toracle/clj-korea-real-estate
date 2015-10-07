@@ -52,7 +52,7 @@ GET http://rtmobile.molit.go.kr/mobile.do?cmd=:cmd&sidoCode=:sidoCode&gugunCode=
 :dongCode := "1162010100"
 GET http://rtmobile.molit.go.kr/mobile.do?cmd=:cmd&viewType=:viewType&jongryuCode=:jongryuCode&gubunCode=:gubunCode&gubunCode2=:gubunCode2&dealYear=:dealYear&sidoCode=:sidoCode&gugunCode=:gugunCode&dongCode=:dongCode
 
-# 단지 정보 가져오기
+# 거래 정보 가져오기
 :cmd := "getDetailListAjax"
 :viewType := "LOCAL"
 :jongryuCode := "2"
@@ -64,3 +64,25 @@ GET http://rtmobile.molit.go.kr/mobile.do?cmd=:cmd&viewType=:viewType&jongryuCod
 :dongCode := "1162010100"
 :bldgCd := "12057117"
 GET http://rtmobile.molit.go.kr/mobile.do?cmd=:cmd&viewType=:viewType&jongryuCode=:jongryuCode&gubunCode=:gubunCode&gubunCode2=:gubunCode2&dealYear=:dealYear&sidoCode=:sidoCode&gugunCode=:gugunCode&dongCode=:dongCode&bldgCd=:bldgCd
+
+# 단지 정보 가져오기
+:cmd := "getDanjiInfoAjax"
+:jongryuCode := "1"
+:gubunCode := "2"
+:gubunCode2 := "LAND"
+:gugunCode := "11620"
+:dongCode := "1162010300"
+:bldgCd := "20034122"
+GET http://rtmobile.molit.go.kr/mobile.do?cmd=:cmd&jongryuCode=:jongryuCode&gubunCode=:gubunCode&gubunCode2=:gubunCode2&gugunCode=:gugunCode&bldgCd=:bldgCd
+
+# 단지 정보 가져오기
+:cmd := "getDanjiInfoAjax"
+:jongryuCode := "2"
+:gubunCode := "2"
+:gubunCode2 := "LAND"
+:dealYear := "2015"
+:sidoCode := "11"
+:gugunCode := "11620"
+:dongCode := "1162010300"
+:bldgCd := "12057117"
+GET http://rtmobile.molit.go.kr/mobile.do?cmd=:cmd&jongryuCode=:jongryuCode&dealYear=:dealYear&gubunCode=:gubunCode&gubunCode2=:gubunCode2&sidoCode=:sidoCode&gugunCode=:gugunCode&bldgCd=:bldgCd
