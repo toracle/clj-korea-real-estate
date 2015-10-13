@@ -46,7 +46,7 @@
         last-modified (c/from-long last-modified-timestamp)
         now (t/today 0 0)
         current-year (t/year now)
-        kwargs-year (:dealYear a)]
+        kwargs-year (:dealYear now)]
     (if (= 0 last-modified-timestamp)
       false
       (if-not kwargs-year
